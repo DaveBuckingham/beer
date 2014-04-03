@@ -1,6 +1,5 @@
 #include "defines.h"
 
-
 double sigma (double x) {
     return (1 / (1 + exp(-x)));
 }
@@ -8,16 +7,18 @@ double sigma (double x) {
 
 void initialize_ann(ANN *ann) {
     int i;
-    ann->bias = (double*)malloc(sizeof(double) * NUM_NODES);
+    ann->y_dot =          (double*)malloc(sizeof(double) * NUM_NODES);
+    ann->bias =           (double*)malloc(sizeof(double) * NUM_NODES);
     ann->time_constants = (double*)malloc(sizeof(double) * NUM_NODES);
-    ann->activation = (double*)malloc(sizeof(double) * NUM_NODES);
+    ann->activation =     (double*)malloc(sizeof(double) * NUM_NODES);
     ann->sensor_weights = (double*)malloc(sizeof(double) * NUM_NODES);
-    ann->weights = (double**)malloc(sizeof(double*) * NUM_NODES);
+    ann->weights =        (double**)malloc(sizeof(double*) * NUM_NODES);
     for(i = 0; i < NUM_NODES; i++) {
 	ann->weights[i] = (double*)malloc(sizeof(double) * NUM_NODES);
     }
 }
 
+// FOR DEBUGGING
 void print_ann (ANN *ann) {
     int i;
     fprintf(stderr, "ANN: ");
@@ -31,6 +32,9 @@ void decode_genome(double *ind, ANN *ann) {
     int i, j, gene;
     gene = 0;
     initialize_ann(ann);
+    for (i = 0; i < NUM_NODES; i++) {
+	ann->y_dot[i] = 0;
+    }
     for (i = 0; i < NUM_NODES; i++) {
 	ann->activation[i] = 0;
     }
@@ -61,13 +65,12 @@ double update_ann (ANN *ann, double sensor) {
 
     double newActivation[NUM_NODES];
     for (i=0; i < NUM_NODES; i++) {
+	newActivation[i] = ann->activation[i] + (TIME_STEP * ann->y_dot[i]);
 	sum = 0;
 	for (j=0; j < NUM_NODES; j++) {
 	    sum += (ann->weights[j][i] * sigma(ann->activation[j] + ann->bias[j]));
 	}
-	double y_dot = (sum + (ann->sensor_weights[i] * sensor) - ann->activation[i]) / ann->time_constants[i];
-	newActivation[i] = ann->activation[i] + (TIME_STEP * y_dot);
-	//newActivation[i] = sum;
+	ann->y_dot[i] = (sum + (ann->sensor_weights[i] * sensor) - ann->activation[i]) / ann->time_constants[i];
     }
     for (i=0; i < NUM_NODES; i++) {
 	ann->activation[i] = newActivation[i];
@@ -90,9 +93,6 @@ double evaluate_chemotaxis (ANN *ann, int print) {
     double food_distance;
     double x_food;
     double y_food;
-    //double velocity_left;
-    //double velocity_right;
-    //is this ok or do we need to map to a different range?
     double *velocity_left;
     double *velocity_right;
     double orientation;
@@ -119,7 +119,7 @@ double evaluate_chemotaxis (ANN *ann, int print) {
 
     for (rep = 0; rep < NUM_CHEMOTAXIS_FOOD_REPS; rep++) {
 
-	food_distance = (randf() * 5) + 10;
+	initial_distance = food_distance = (randf() * 5) + 10;
 	double food_direction = randf() * 2 * PI;
 	x_food = food_distance * sin(food_direction);
 	y_food = food_distance * cos(food_direction);
@@ -135,27 +135,32 @@ double evaluate_chemotaxis (ANN *ann, int print) {
 	    double y_diff = y_pos - y_food;
 	    food_distance = sqrt( (x_diff * x_diff) + (y_diff * y_diff)); //pythagorean theorem
 
-	    if (step == 0) {
-		initial_distance = food_distance;
-	    }
 	    sum_distance += food_distance;
 
+	    sensor = exp(LAMBDA * food_distance);
+
 	    //update ann
-	    //normalize sensor between 0 and 1. not sure how izquierdo did this?
-	    //sensor = food_distance / MAX_FOOD_DISTANCE;
-	    sensor = food_distance / 50;
-	    sensor = sensor > 1.0 ? 1.0 : sensor;
 	    update_ann(ann, sensor);
 
-	    //calculate dots
+	    double radius = 0;
+	    double distance = 0;
+
+// MAYBE DO IT THIS WAY?
+//	    if (*velocity_left > 0.0 && *velocity_right > 0.0) {
+//		if (*velocity_left > *velocity_right) {
+//		    circumference = (CHASSIS_RADIUS / 2) +
+//			            (CHASSIS_RADIUS / (fmax(*velocity_left, *velocity_right) /
+//						       fmin(*velocity_left, *velocity_right) - 1));
+
+
+// I DON'T THINK THIS IS QUITE RIGHT
 	    linear_speed = (*velocity_left + *velocity_right) / 2;
 	    angular_speed = (*velocity_right - *velocity_left) / CHASSIS_RADIUS;
-	    double x_dot = cos(orientation) * linear_speed;
-	    double y_dot = sin(orientation) * linear_speed;
+	    double delta_x = cos(orientation) * linear_speed;
+	    double delta_y = sin(orientation) * linear_speed;
 
-	    //update position and orientation
-	    x_pos = x_pos + (x_dot * TIME_STEP);
-	    y_pos = y_pos + (y_dot * TIME_STEP);
+	    x_pos = x_pos + (delta_x * TIME_STEP);
+	    y_pos = y_pos + (delta_y * TIME_STEP);
 	    orientation = orientation + (angular_speed * TIME_STEP);
 
 	    if (PRINT_ROBOT_INFO) {
@@ -165,17 +170,34 @@ double evaluate_chemotaxis (ANN *ann, int print) {
 	    }
 	}
 	fit += ( ( initial_distance - (sum_distance / NUM_CHEMOTAXIS_STEPS) ) / initial_distance );
-
     }
 
     if (print) {
 	fclose(trace_fp);
     }
-    return fit;
-    //return 100 - food_distance;
+    return fit / NUM_CHEMOTAXIS_FOOD_REPS ;
 }
 
+double evaluate_insect (ANN *ann) {
+    int step;
+    double x;
+    for (step=0; step < NUM_WALKING_STEPS; step++) {
+    }
+}
+
+double evaluate_test (double *ind) {
+    int i;
+    double sum = 0;
+    for (i = 0; i < NUM_NODES; i++) {
+	sum += ind[i];
+    }
+    return (sum / NUM_NODES);
+}
+
+
 double evaluate(double *ind, int print) {
+
+    //return evaluate_test(ind);
     int i;
     double fit, chemotaxis_fit, test_fit;
     ANN ann;
@@ -185,12 +207,4 @@ double evaluate(double *ind, int print) {
 
     fit = chemotaxis_fit;
     return fit;
-}
-
-double evaluate_insect (ANN *ann) {
-    int step;
-    double x;
-    for (step=0; step < NUM_WALKING_STEPS; step++) {
-    }
-
 }

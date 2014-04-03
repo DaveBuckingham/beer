@@ -1,6 +1,6 @@
 #include "evaluate.c"
 
-//some global variables :(
+// SOME GLOBAL VARIABLES
 double best_of_run_fit;
 double best_of_run_genome[GENOME_SIZE];
 
@@ -14,7 +14,6 @@ void initialize_genome(double *g, int size) {
 void mutate (double *genome) {
     int i;
     for (i=0; i < GENOME_SIZE; i++) {
-	//printf("%f ", genome[i]);
 	genome[i] += gaussrand() * 0.01;
 	while (genome[i] < 0 || genome[i] > 1) {
 	    if (genome[i] < 0) {
@@ -30,7 +29,7 @@ void mutate (double *genome) {
 void copy_genome(double *to, double *from) {
     int i;
     for (i=0; i < GENOME_SIZE; i++) {
-	to[i] = from [i];
+	to[i] = from[i];
     }
 }
 
@@ -109,7 +108,6 @@ void evolve(double **population) {
     print_genome(best_of_run_genome);
     printf("FITNESS: %f\n",  best_of_run_fit);
     evaluate(best_of_run_genome, 1);
-
 }
 
 void clean_up() {
@@ -127,19 +125,18 @@ main(int argc, char *argv[]) {
     int i;
 
 
-    /*
-    double test_ind[] = {.5, .5, .5, //biases
-                         .7, .6, .5, //sensor weights
-			 1, 1, 1, //time constants
-			 //.5, .5, .5, .1, .1, .1, .5, .5, .5}; //weights
-			 //.5, .5, .5, .5, .5, .5, .5, .5, .5}; //weights
-			 .9, .4, .3, .1, .8, .5, .3, .7, .7}; //weights
+// STILL ROBOT
+/*
+    double test_ind[] = {.0, .0, .0, //biases
+                         .5, .5, .5, //sensor weights
+			 .0, .0, .0, //time constants
+			 .5, .5, .5, .5, .5, .5, .5, .5, .5}; //weights
 
-    evaluate(test_ind);
+    evaluate(test_ind, 1);
     exit(1);
-    */
+*/
 
-    double *(population[POPULATION_SIZE]); //array of pointers to type double
+    double *(population[POPULATION_SIZE]);  // array of pointers to type double
     for (i=0; i < POPULATION_SIZE; i++) {
 	population[i] = (double*)malloc(sizeof(double) * GENOME_SIZE);
 	initialize_genome(population[i], GENOME_SIZE);

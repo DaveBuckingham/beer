@@ -13,42 +13,35 @@
 #define PRINT_ANN_STATE          0
 
 //evolution
-#define POPULATION_SIZE 50 //paper
-#define GENERATIONS 100
-#define MUTATION_VARIANCE 0.01 //paper
-#define DEMES_SIZE 10 //paper
-#define NUM_WALKING_TRIALS 2
-#define NUM_CHEMOTAXIS_TRIALS 15
+#define POPULATION_SIZE 50         // paper
+#define GENERATIONS 1000           // not sure what this should be
+#define MUTATION_VARIANCE 0.01     // paper
+#define DEMES_SIZE 10              // paper
+#define NUM_WALKING_TRIALS 2       // paper
+#define NUM_CHEMOTAXIS_TRIALS 15   // paper
 
 //walking task
-#define NUM_WALKING_STEPS 220 //paper
+#define NUM_WALKING_STEPS 220      // paper
 
-#define NUM_NODES 3
+#define NUM_NODES 5                // 3, 4, 5
 #define GENOME_SIZE ((NUM_NODES * NUM_NODES) + (3 * NUM_NODES))
 
 //chemotaxis task
-#define NUM_CHEMOTAXIS_STEPS 1000
-//#define NUM_CHEMOTAXIS_STEPS 100 //paper
-#define CHASSIS_RADIUS 1 // can't find what this is supposed to be !!!!
-//#define NUM_CHEMOTAXIS_FOOD_REPS 3 //paper
-#define NUM_CHEMOTAXIS_FOOD_REPS 1
-#define LAMBDA -0.0138 //paper
-#define MIN_FOOD_DISTANCE 10 //paper
-#define MAX_FOOD_DISTANCE 15 //paper
+#define NUM_CHEMOTAXIS_STEPS 100   // paper, seems like needs to be longer
+#define CHASSIS_RADIUS 1           // can't find what this is supposed to be
+#define NUM_CHEMOTAXIS_FOOD_REPS 3 // paper
+#define LAMBDA -0.0138             // paper
+#define MIN_FOOD_DISTANCE 10       // paper
+#define MAX_FOOD_DISTANCE 15       // paper
 
 //integraiton
 #define TIME_STEP 0.1 //paper
 
-//#define INFINITY 999999999
 #define PI 3.1415926535
 
 
 typedef struct {
-
-} NODE;
-
-
-typedef struct {
+    double *y_dot;
     double *bias;              //theta
     double *time_constants;    //tau
     double *activation;        //y
@@ -85,5 +78,4 @@ double gaussrand() {
 double randf() {
     return (double)rand() / (double)RAND_MAX ;
 }
-
 
